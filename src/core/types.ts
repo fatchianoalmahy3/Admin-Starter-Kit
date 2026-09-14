@@ -1,4 +1,15 @@
-export type FieldType = 'text' | 'number' | 'select' | 'richtext' | 'file' | 'location';
+export type FieldType = 
+  | 'text' 
+  | 'textarea'
+  | 'number' 
+  | 'select' 
+  | 'date'
+  | 'email'
+  | 'phone'
+  | 'boolean'
+  | 'richtext' 
+  | 'file' 
+  | 'location';
 
 export interface FieldValidation {
   required?: boolean;
@@ -17,6 +28,9 @@ export interface FieldSchema {
   validation?: FieldValidation;
   roles?: string[]; // RBAC level: roles allowed to modify/write this field
   defaultValue?: any;
+  helpText?: string;
+  readOnly?: boolean;
+  colSpan?: 1 | 2; // For responsive 2-column form grids
 }
 
 export interface ModuleSchema {

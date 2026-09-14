@@ -47,7 +47,7 @@ export function FilterModal({
   // Identify filterable fields
   const selectFields = schema.fields.filter(f => f.type === 'select' && f.options && f.options.length > 0);
   const numberFields = schema.fields.filter(f => f.type === 'number');
-  const sortableFields = schema.fields.filter(f => ['text', 'number', 'select'].includes(f.type));
+  const sortableFields = schema.fields.filter(f => ['text', 'number', 'select', 'date', 'email', 'phone', 'boolean'].includes(f.type));
 
   const handleToggleSelectOption = (fieldKey: string, optionValue: string) => {
     setDraftFilters(prev => {

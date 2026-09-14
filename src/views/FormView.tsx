@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleSchema } from '../core/types';
 import { getVisibleFields } from '../core/formatters';
-import { ArrowLeft, Save, AlertTriangle, CheckCircle2, RotateCcw } from 'lucide-react';
+import { validateRecord } from '../core/validator';
+import { ArrowLeft, Save, AlertTriangle, CheckCircle2, RotateCcw, HelpCircle } from 'lucide-react';
 import { MediaUploader } from '../components/MediaUploader';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { LocationPicker } from '../components/LocationPicker';
@@ -87,25 +88,11 @@ export function FormView({
     e.preventDefault();
     setSubmitError(null);
 
-    // Validate fields according to Schema
-    const newErrors: Record<string, string> = {};
-    schema.fields.forEach((field) => {
-      const val = formData[field.key];
-      if (field.validation?.required && (val === undefined || val === null || val === '')) {
-        newErrors[field.key] = `${field.label} wajib diisi.`;
-      }
-      if (field.type === 'number' && val !== undefined && val !== null && val !== '') {
-        const num = Number(val);
-        if (isNaN(num)) {
-          newErrors[field.key] = `${field.label} harus berupa angka numerik valid.`;
-        } else if (field.validation?.min !== undefined && num < field.validation.min) {
-          newErrors[field.key] = `${field.label} minimal ${field.validation.min}.`;
-        }
-      }
-    });
+    // Single source of truth validation using Universal Schema Validator
+    const validation = validateRecord(schema, formData);
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -223,8 +210,35 @@ export function FormView({
                     value={formData[field.key] || null}
                     onChange={(loc) => handleChange(field.key, loc)}
                   />
+                ) : field.type === 'textarea' ? (
+                  <textarea
+                    rows={3}
+                    disabled={field.readOnly}
+                    value={formData[field.key] !== undefined ? formData[field.key] : ''}
+                    placeholder={field.placeholder || `Masukkan ${field.label.toLowerCase()}...`}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    className={`w-full px-4 py-2.5 text-xs bg-white border rounded-xl shadow-2xs focus:outline-none focus:ring-3 transition-all font-medium ${
+                      hasError 
+                        ? 'border-rose-400 focus:ring-rose-100 text-rose-900' 
+                        : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 text-slate-800'
+                    }`}
+                  />
+                ) : field.type === 'boolean' ? (
+                  <label className="flex items-center gap-3 cursor-pointer py-1.5">
+                    <input
+                      type="checkbox"
+                      checked={!!formData[field.key]}
+                      disabled={field.readOnly}
+                      onChange={(e) => handleChange(field.key, e.target.checked)}
+                      className="w-4 h-4 text-indigo-600 rounded-md border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold text-slate-700">
+                      {formData[field.key] ? 'Aktif / Ya' : 'Nonaktif / Tidak'}
+                    </span>
+                  </label>
                 ) : field.type === 'select' ? (
                   <select
+                    disabled={field.readOnly}
                     value={formData[field.key] || ''}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     className={`w-full px-4 py-2.5 text-xs bg-white border rounded-xl shadow-2xs focus:outline-none focus:ring-3 transition-all font-medium min-h-[44px] ${
@@ -242,7 +256,8 @@ export function FormView({
                   </select>
                 ) : (
                   <input
-                    type={field.type === 'number' ? 'number' : 'text'}
+                    type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+                    disabled={field.readOnly}
                     value={formData[field.key] !== undefined ? formData[field.key] : ''}
                     placeholder={field.placeholder || `Masukkan ${field.label.toLowerCase()}...`}
                     onChange={(e) => handleChange(field.key, e.target.value)}
@@ -252,6 +267,14 @@ export function FormView({
                         : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 text-slate-800'
                     }`}
                   />
+                )}
+
+                {/* Optional Help Text */}
+                {field.helpText && !hasError && (
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1 pl-0.5">
+                    <HelpCircle className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span>{field.helpText}</span>
+                  </p>
                 )}
 
                 {/* Validation Error Text */}

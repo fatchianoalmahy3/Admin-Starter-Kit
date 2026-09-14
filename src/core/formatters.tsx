@@ -1,6 +1,6 @@
 import React from 'react';
 import { FieldSchema, ModuleSchema } from './types';
-import { MapPin, FileText, ExternalLink, Download } from 'lucide-react';
+import { MapPin, FileText, ExternalLink, Download, Mail, Phone, CheckCircle, XCircle } from 'lucide-react';
 
 /**
  * Filter out technical ID fields for clean end-user presentation
@@ -41,6 +41,10 @@ export function formatPlainString(field: FieldSchema, val: any): string {
 
   if (field.type === 'file' && val) {
     return '[Lampiran Berkas]';
+  }
+
+  if (field.type === 'boolean') {
+    return val === true || val === 'true' || val === 1 ? 'Aktif' : 'Nonaktif';
   }
 
   return String(val);
@@ -194,7 +198,92 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, value, mode
     );
   }
 
-  // 5. Rich Text
+  // 5. Email with clickable mailto
+  if (field.type === 'email') {
+    if (mode === 'detail') {
+      return (
+        <a 
+          href={`mailto:${value}`}
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+        >
+          <Mail className="w-4 h-4 text-indigo-500" />
+          <span>{String(value)}</span>
+        </a>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-slate-700 font-medium">
+        <Mail className="w-3 h-3 text-indigo-400 shrink-0" />
+        <span className="truncate max-w-[180px]">{String(value)}</span>
+      </span>
+    );
+  }
+
+  // 6. Phone with direct Call/WhatsApp link
+  if (field.type === 'phone') {
+    const cleanNum = String(value).replace(/[^\d+]/g, '');
+    const waLink = cleanNum.startsWith('0') 
+      ? `https://wa.me/62${cleanNum.substring(1)}` 
+      : `https://wa.me/${cleanNum.replace('+', '')}`;
+
+    if (mode === 'detail') {
+      return (
+        <div className="flex items-center gap-3">
+          <p className="text-xs sm:text-sm font-mono font-semibold text-slate-900">
+            {String(value)}
+          </p>
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-200 transition-colors"
+          >
+            <Phone className="w-3 h-3 text-emerald-600" />
+            <span>Chat WhatsApp</span>
+          </a>
+        </div>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-mono text-slate-700">
+        <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
+        <span>{String(value)}</span>
+      </span>
+    );
+  }
+
+  // 7. Boolean / Switch indicator
+  if (field.type === 'boolean') {
+    const isTrue = value === true || value === 'true' || value === 1;
+    return (
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${
+        isTrue 
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+          : 'bg-slate-100 text-slate-500 border-slate-200'
+      }`}>
+        {isTrue ? <CheckCircle className="w-3 h-3 text-emerald-600" /> : <XCircle className="w-3 h-3 text-slate-400" />}
+        <span>{isTrue ? 'Aktif' : 'Nonaktif'}</span>
+      </span>
+    );
+  }
+
+  // 8. Textarea
+  if (field.type === 'textarea') {
+    if (mode === 'detail') {
+      return (
+        <p className="text-xs sm:text-sm text-slate-700 whitespace-pre-line leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          {String(value)}
+        </p>
+      );
+    }
+    return (
+      <span className="text-xs text-slate-700 truncate max-w-[200px] block" title={String(value)}>
+        {String(value)}
+      </span>
+    );
+  }
+
+  // 9. Rich Text
   if (field.type === 'richtext') {
     if (mode === 'detail') {
       return (
@@ -211,7 +300,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, value, mode
     );
   }
 
-  // 6. Default Text / String
+  // 10. Default Text / Date / String
   if (mode === 'detail') {
     return (
       <p className="text-xs sm:text-sm font-semibold text-slate-800">

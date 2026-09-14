@@ -604,7 +604,7 @@ export function ListView({
                   </th>
                   {visibleFields.map((field) => {
                     const isSorted = activeFilters.sortBy === field.key;
-                    const isSortable = ['text', 'number', 'select'].includes(field.type);
+                    const isSortable = ['text', 'number', 'select', 'date', 'email', 'phone', 'boolean'].includes(field.type);
                     return (
                       <th 
                         key={field.key} 

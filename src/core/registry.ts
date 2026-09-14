@@ -57,7 +57,31 @@ export const MODULE_REGISTRY: ModuleSchema[] = [
         label: 'Nama Lengkap',
         type: 'text',
         placeholder: 'Masukkan nama sesuai KTP',
-        validation: { required: true }
+        validation: { required: true, min: 3 },
+        helpText: 'Nama resmi karyawan sesuai kartu identitas kependudukan.'
+      },
+      {
+        key: 'email',
+        label: 'Email Korporat',
+        type: 'email',
+        placeholder: 'nama@perusahaan.com',
+        validation: { required: true },
+        helpText: 'Alamat surel resmi untuk korespondensi dan akun akses sistem.'
+      },
+      {
+        key: 'phone',
+        label: 'Nomor WhatsApp / Kontak',
+        type: 'phone',
+        placeholder: '081234567890',
+        validation: { required: true },
+        helpText: 'Nomor telepon seluler aktif yang terhubung ke WhatsApp.'
+      },
+      {
+        key: 'is_active',
+        label: 'Status Karyawan Aktif',
+        type: 'boolean',
+        defaultValue: true,
+        helpText: 'Centang jika status kepegawaian staf ini masih aktif bekerja.'
       },
       {
         key: 'role_title',

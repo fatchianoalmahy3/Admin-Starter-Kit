@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { ModuleSchema } from '../core/types';
 import { getVisibleFields } from '../core/formatters';
+import { validateRecord } from '../core/validator';
 
 export interface ParsedImportRow {
   rowNumber: number;
@@ -147,26 +148,15 @@ export class ExcelService {
               }
             });
 
-            // Validate against schema
-            schema.fields.forEach((f) => {
-              if (f.key === 'id') return;
-
-              const val = parsedData[f.key];
-              if (f.validation?.required && (val === undefined || val === null || val === '')) {
-                errors.push(`Kolom '${f.label}' wajib diisi.`);
-              }
-              if (f.type === 'number' && val !== undefined && val !== null && val !== '') {
-                if (isNaN(Number(val))) {
-                  errors.push(`Kolom '${f.label}' harus berupa angka numerik.`);
-                }
-              }
-            });
+            // Validate against schema using Universal Schema Validator
+            const validation = validateRecord(schema, parsedData);
+            validation.errorList.forEach(err => errors.push(err.message));
 
             return {
               rowNumber: idx + 2, // Excel row numbering
               data: parsedData,
               errors,
-              isValid: errors.length === 0
+              isValid: validation.isValid
             };
           });
 
